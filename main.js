@@ -3,11 +3,11 @@ var CryptoJS = require("crypto-js");
 var express = require("express");
 var bodyParser = require('body-parser');
 var WebSocket = require("ws");
+var difficulty = 4;
 
 var http_port = process.env.HTTP_PORT || 3001;
 var p2p_port = process.env.P2P_PORT || 6001;
 var initialPeers = process.env.PEERS ? process.env.PEERS.split(',') : [];
-var difficulty = 4;
 
 class Block {
     constructor(index, previousHash, timestamp, data, hash, difficulty, nonce) {
@@ -126,12 +126,12 @@ var mineBlock = (blockData) => {
     return new Block(nextIndex, previousBlock.hash, nextTimestamp, blockData, nextHash, difficulty, nonce);
 }
 
-var calculateHashForBlock = (block) => {
-    return calculateHash(block.index, block.previousHash, block.timestamp, block.data, block.nonce);
+var calculateHash = (index, previousHash, timestamp, data, nonce) => {
+  return CryptoJS.SHA256(index + previousHash + timestamp + data + nonce).toString();
 };
 
-var calculateHash = (index, previousHash, timestamp, data, nonce) => {
-    return CryptoJS.SHA256(index + previousHash + timestamp + data + nonce).toString();
+var calculateHashForBlock = (block) => {
+    return calculateHash(block.index, block.previousHash, block.timestamp, block.data, block.nonce);
 };
 
 var addBlock = (newBlock) => {
@@ -213,6 +213,27 @@ var isValidChain = (blockchainToValidate) => {
 };
 
 var getLatestBlock = () => blockchain[blockchain.length - 1];
+
+// function testApp() {
+//   function showBlockchain(inputBlockchain) {
+//     for (let i = 0; i < inputBlockchain.length; i++) {
+//       console.log(inputBlockchain[i]);
+//     }
+//     console.log();
+//   }
+//   showBlockchain(blockchain);
+//   console.log(calculateHashForBlock(getGenesisBlock()))
+//   addBlock Test
+//   console.log("blockchain before addBlock() execution: ");
+//   showBlockchain(blockchain);
+//   addBlock(generateNextBlock('test block data'));
+//   console.log("\n");
+//   console.log("blockchain after addBlock() execution: ");
+//   showBlockchain(blockchain);
+// }
+
+// testApp();
+
 var queryChainLengthMsg = () => ({'type': MessageType.QUERY_LATEST});
 var queryAllMsg = () => ({'type': MessageType.QUERY_ALL});
 var responseChainMsg = () =>({
